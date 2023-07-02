@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  image       String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model job {
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                    String   @db.VarChar(255)
+  description              String?  @db.VarChar(255)
+  buyer_id                 String?  @db.Uuid
+  seller_id                String?  @db.Uuid
+  created_at               DateTime @default(now()) @db.Timestamp(6)
+  updated_at               DateTime @default(now()) @db.Timestamp(6)
+  user_job_buyer_idTouser  user?    @relation("job_buyer_idTouser", fields: [buyer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_job_seller_idTouser user?    @relation("job_seller_idTouser", fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  review                   review[]
+}
+
+model review {
+  id                            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating                        Int
+  comment                       String?  @db.VarChar(255)
+  job_id                        String?  @db.Uuid
+  reviewer_id                   String?  @db.Uuid
+  reviewee_id                   String?  @db.Uuid
+  created_at                    DateTime @default(now()) @db.Timestamp(6)
+  updated_at                    DateTime @default(now()) @db.Timestamp(6)
+  job                           job?     @relation(fields: [job_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_review_reviewee_idTouser user?    @relation("review_reviewee_idTouser", fields: [reviewee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_review_reviewer_idTouser user?    @relation("review_reviewer_idTouser", fields: [reviewer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                           String    @unique @db.VarChar(255)
+  firstName                       String?   @db.VarChar(255)
+  lastName                        String?   @db.VarChar(255)
+  roq_user_id                     String    @db.VarChar(255)
+  tenant_id                       String    @db.VarChar(255)
+  created_at                      DateTime  @default(now()) @db.Timestamp(6)
+  updated_at                      DateTime  @default(now()) @db.Timestamp(6)
+  account                         account[]
+  job_job_buyer_idTouser          job[]     @relation("job_buyer_idTouser")
+  job_job_seller_idTouser         job[]     @relation("job_seller_idTouser")
+  review_review_reviewee_idTouser review[]  @relation("review_reviewee_idTouser")
+  review_review_reviewer_idTouser review[]  @relation("review_reviewer_idTouser")
+}
